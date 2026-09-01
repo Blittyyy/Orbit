@@ -8,6 +8,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import { particleCount } from '../../visual/effects';
+
 const STREAK_COUNT = 7;
 const SPARK_COUNT = 6;
 
@@ -205,6 +208,9 @@ export function PlanetUnlockBurst({
   active,
   accentColor = 'rgba(253, 224, 71, 0.35)',
 }: PlanetUnlockBurstProps) {
+  const reduceEffects = useReduceEffects();
+  const streakCount = particleCount(STREAK_COUNT, reduceEffects);
+  const sparkCount = particleCount(SPARK_COUNT, reduceEffects);
   const ringSize = radius * 1.75;
   const softAccent = accentColor.includes('rgba')
     ? accentColor.replace(/,\s*[0-9.]+\s*\)/, ', 0.28)')
@@ -243,8 +249,8 @@ export function PlanetUnlockBurst({
         peakOpacity={0.14}
       />
 
-      {Array.from({ length: STREAK_COUNT }, (_, index) => {
-        const angle = (index / STREAK_COUNT) * Math.PI * 2 + 0.2;
+      {Array.from({ length: streakCount }, (_, index) => {
+        const angle = (index / streakCount) * Math.PI * 2 + 0.2;
         return (
           <BurstStreak
             key={`streak-${index}`}
@@ -257,8 +263,8 @@ export function PlanetUnlockBurst({
         );
       })}
 
-      {Array.from({ length: SPARK_COUNT }, (_, index) => {
-        const angle = (index / SPARK_COUNT) * Math.PI * 2 + 0.55;
+      {Array.from({ length: sparkCount }, (_, index) => {
+        const angle = (index / sparkCount) * Math.PI * 2 + 0.55;
         return (
           <BurstSpark
             key={`spark-${index}`}

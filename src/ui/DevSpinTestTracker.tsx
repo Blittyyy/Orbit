@@ -32,13 +32,14 @@ function createEmptyStats(currentMultiplier = 1): SpinTestStats {
 
 interface DevSpinTestTrackerProps {
   spinRatio: number;
+  embedded?: boolean;
 }
 
 /**
  * DEV-only timed spin calibration session.
  * Measures the live Energy spin production multiplier (time-weighted).
  */
-export function DevSpinTestTracker({ spinRatio }: DevSpinTestTrackerProps) {
+export function DevSpinTestTracker({ spinRatio, embedded = false }: DevSpinTestTrackerProps) {
   const [phase, setPhase] = useState<TestPhase>('idle');
   const [stats, setStats] = useState<SpinTestStats>(() => createEmptyStats());
 
@@ -180,7 +181,7 @@ export function DevSpinTestTracker({ spinRatio }: DevSpinTestTrackerProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={embedded ? styles.embedded : styles.container}>
       {phase === 'idle' ? (
         <Pressable onPress={startTest} style={styles.button}>
           <Text style={styles.buttonText}>START SPIN TEST</Text>
@@ -225,11 +226,14 @@ export function DevSpinTestTracker({ spinRatio }: DevSpinTestTrackerProps) {
 
 const styles = StyleSheet.create({
   container: {
+    maxWidth: 168,
     position: 'absolute',
     right: 12,
     top: 96,
     zIndex: 9,
-    maxWidth: 168,
+  },
+  embedded: {
+    alignSelf: 'stretch',
   },
   button: {
     backgroundColor: 'rgba(30, 58, 138, 0.9)',

@@ -4,10 +4,14 @@ import { StyleSheet, View } from 'react-native';
 import { getPlayablePlanetIds, type PlanetId } from '../config/planets';
 import { GameSessionProvider, useGameSession } from '../context/GameSessionContext';
 import { useFeedback } from '../feedback';
+import { isOverlayRoute } from '../navigation/navTransition';
 import { AchievementToast } from '../ui/AchievementToast';
+import { OverlaySceneTransition } from '../ui/transitions/OverlaySceneTransition';
+import { EffectsSettingsProvider } from '../visual/EffectsSettingsContext';
 import { AchievementsScreen } from './AchievementsScreen';
 import { PlanetGameScreen } from './PlanetGameScreen';
 import { PrestigeScreen } from './PrestigeScreen';
+import { SettingsScreen } from './SettingsScreen';
 import { SolarSystemScreen } from './SolarSystemScreen';
 
 const ACHIEVEMENT_TOAST_DURATION_MS = 2600;
@@ -21,12 +25,17 @@ function renderRoute(route: ReturnType<typeof useGameSession>['route']) {
     return <SolarSystemScreen />;
   }
 
-  if (route === 'prestige') {
-    return <PrestigeScreen />;
-  }
+  if (isOverlayRoute(route)) {
+    const overlay =
+      route === 'prestige' ? (
+        <PrestigeScreen />
+      ) : route === 'achievements' ? (
+        <AchievementsScreen />
+      ) : (
+        <SettingsScreen />
+      );
 
-  if (route === 'achievements') {
-    return <AchievementsScreen />;
+    return <OverlaySceneTransition>{overlay}</OverlaySceneTransition>;
   }
 
   if (isPlayableRoute(route)) {
@@ -64,7 +73,7 @@ function AchievementNotificationHost() {
 }
 
 function AppNavigator() {
-  const { route, leavingRoute, isReady } = useGameSession();
+  const { route, leavingRoute, isReady, state } = useGameSession();
 
   if (!isReady) {
     return <View style={styles.boot} />;
@@ -74,15 +83,17 @@ function AppNavigator() {
     leavingRoute !== null && leavingRoute !== route;
 
   return (
-    <View style={styles.root}>
-      {showLeavingLayer ? (
-        <View pointerEvents="none" style={styles.leavingLayer}>
-          {renderRoute(leavingRoute)}
-        </View>
-      ) : null}
-      <View style={styles.activeLayer}>{renderRoute(route)}</View>
-      <AchievementNotificationHost />
-    </View>
+    <EffectsSettingsProvider reduceEffects={state.settings.reduceEffects}>
+      <View style={styles.root}>
+        {showLeavingLayer ? (
+          <View pointerEvents="none" style={styles.leavingLayer}>
+            {renderRoute(leavingRoute)}
+          </View>
+        ) : null}
+        <View style={styles.activeLayer}>{renderRoute(route)}</View>
+        <AchievementNotificationHost />
+      </View>
+    </EffectsSettingsProvider>
   );
 }
 

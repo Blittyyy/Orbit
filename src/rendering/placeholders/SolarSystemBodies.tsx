@@ -2,6 +2,8 @@ import { Circle, Group, Oval, RadialGradient, vec } from '@shopify/react-native-
 
 import type { PlanetVisualConfig } from '../../config/celestial';
 import { SUN_VISUAL } from '../../config/celestial/sun';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import { scaleRgbaAlpha } from '../../visual/effects';
 
 interface PlaceholderPlanetDotProps {
   config: PlanetVisualConfig;
@@ -40,6 +42,8 @@ export function PlaceholderPlanetDot({
   const tilt = config.axialTiltRadians ?? 0;
   const atmosphereColor =
     config.placeholderAtmosphereColor ?? 'rgba(59, 130, 246, 0.15)';
+  const reduceEffects = useReduceEffects();
+  const atmosphere = scaleRgbaAlpha(atmosphereColor, reduceEffects);
 
   const ringLayer = rings
     ? rings.bands.map((band, index) => {
@@ -100,7 +104,7 @@ export function PlaceholderPlanetDot({
           cx={x}
           cy={y}
           r={displayRadius * (frontier ? 1.45 : 1.35)}
-          color={atmosphereColor}
+          color={atmosphere}
         />
       )}
       <Circle cx={x} cy={y} r={displayRadius} color={config.placeholderColor} />
@@ -141,19 +145,23 @@ interface PlaceholderSunProps {
 }
 
 export function PlaceholderSun({ x, y, radius }: PlaceholderSunProps) {
+  const reduceEffects = useReduceEffects();
+  const outerGlow = scaleRgbaAlpha(SUN_VISUAL.placeholderGlowColor, reduceEffects);
+  const innerGlow = scaleRgbaAlpha('rgba(251, 191, 36, 0.22)', reduceEffects);
+
   return (
     <Group>
       <Circle
         cx={x}
         cy={y}
-        r={radius * 2.2}
-        color={SUN_VISUAL.placeholderGlowColor}
+        r={radius * (reduceEffects ? 1.7 : 2.2)}
+        color={outerGlow}
       />
       <Circle
         cx={x}
         cy={y}
-        r={radius * 1.5}
-        color="rgba(251, 191, 36, 0.22)"
+        r={radius * (reduceEffects ? 1.25 : 1.5)}
+        color={innerGlow}
       />
       <Circle cx={x} cy={y} r={radius} color={SUN_VISUAL.placeholderColor} />
       <Circle cx={x} cy={y} r={radius}>

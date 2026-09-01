@@ -64,6 +64,18 @@ export function SolarSystemSceneTransition({
       return;
     }
 
+    if (phase === 'out' && kind === 'solar-to-overlay') {
+      cancelAnimation(mapScale);
+      cancelAnimation(mapOpacity);
+      cancelAnimation(chromeOpacity);
+      cancelAnimation(panelOpacity);
+      mapScale.value = 1;
+      mapOpacity.value = withTiming(0, { duration: NAV_TRANSITION_OUT_MS });
+      chromeOpacity.value = withTiming(0, { duration: NAV_TRANSITION_OUT_MS });
+      panelOpacity.value = withTiming(0, { duration: NAV_TRANSITION_OUT_MS });
+      return;
+    }
+
     if (phase === 'in' && kind === 'planet-to-solar') {
       cancelAnimation(mapScale);
       cancelAnimation(mapOpacity);
@@ -77,6 +89,24 @@ export function SolarSystemSceneTransition({
         duration: NAV_TRANSITION_IN_MS,
         easing: Easing.out(Easing.cubic),
       });
+      mapOpacity.value = withTiming(1, { duration: NAV_TRANSITION_IN_MS });
+      chromeOpacity.value = withTiming(1, { duration: NAV_TRANSITION_IN_MS });
+      panelOpacity.value = withTiming(1, {
+        duration: NAV_TRANSITION_IN_MS,
+        easing: Easing.out(Easing.cubic),
+      });
+      return;
+    }
+
+    if (phase === 'in' && kind === 'overlay-to-solar') {
+      cancelAnimation(mapScale);
+      cancelAnimation(mapOpacity);
+      cancelAnimation(chromeOpacity);
+      cancelAnimation(panelOpacity);
+      mapScale.value = 1;
+      mapOpacity.value = 0;
+      chromeOpacity.value = 0;
+      panelOpacity.value = 0;
       mapOpacity.value = withTiming(1, { duration: NAV_TRANSITION_IN_MS });
       chromeOpacity.value = withTiming(1, { duration: NAV_TRANSITION_IN_MS });
       panelOpacity.value = withTiming(1, {

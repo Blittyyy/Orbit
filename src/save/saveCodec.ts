@@ -34,7 +34,7 @@ import {
   type UpgradeProgressState,
 } from '../game/types';
 import { normalizeAchievementProgress } from '../achievements/evaluate';
-import { normalizeGameSettings } from '../game/settings';
+import { DEFAULT_GAME_SETTINGS, normalizeGameSettings } from '../game/settings';
 import {
   CURRENT_SAVE_VERSION,
   type LoadedSave,
@@ -50,6 +50,7 @@ import {
   type SaveStateV6,
   type SaveStateV7,
   type SaveStateV8,
+  type SaveStateV9,
   type VersionedSaveEnvelope,
 } from './saveTypes';
 
@@ -542,10 +543,7 @@ function parseSaveStateV6(raw: unknown): SaveStateV6 | null {
 function migrateV6ToV7(v6: SaveStateV6): SaveStateV7 {
   return {
     ...v6,
-    settings: {
-      soundEnabled: true,
-      hapticsEnabled: true,
-    },
+    settings: { ...DEFAULT_GAME_SETTINGS },
   };
 }
 
@@ -600,15 +598,29 @@ function parseSaveStateV8(raw: unknown): SaveStateV8 | null {
   };
 }
 
-function migrateEnvelope(envelope: VersionedSaveEnvelope): SaveStateV8 | null {
+function migrateV8ToV9(v8: SaveStateV8): SaveStateV9 {
+  return {
+    ...v8,
+    settings: normalizeGameSettings(v8.settings),
+  };
+}
+
+function parseSaveStateV9(raw: unknown): SaveStateV9 | null {
+  const v8 = parseSaveStateV8(raw);
+  return v8 ? migrateV8ToV9(v8) : null;
+}
+
+function migrateEnvelope(envelope: VersionedSaveEnvelope): SaveStateV9 | null {
   switch (envelope.version) {
     case 1: {
       const v1 = parseSaveStateV1(envelope.state);
       return v1
-        ? migrateV7ToV8(
-            migrateV6ToV7(
-              migrateV5ToV6(
-                migrateV4ToV5(migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(v1)))),
+        ? migrateV8ToV9(
+            migrateV7ToV8(
+              migrateV6ToV7(
+                migrateV5ToV6(
+                  migrateV4ToV5(migrateV3ToV4(migrateV2ToV3(migrateV1ToV2(v1)))),
+                ),
               ),
             ),
           )
@@ -617,9 +629,11 @@ function migrateEnvelope(envelope: VersionedSaveEnvelope): SaveStateV8 | null {
     case 2: {
       const v2 = parseSaveStateV2(envelope.state);
       return v2
-        ? migrateV7ToV8(
-            migrateV6ToV7(
-              migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(migrateV2ToV3(v2)))),
+        ? migrateV8ToV9(
+            migrateV7ToV8(
+              migrateV6ToV7(
+                migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(migrateV2ToV3(v2)))),
+              ),
             ),
           )
         : null;
@@ -627,31 +641,41 @@ function migrateEnvelope(envelope: VersionedSaveEnvelope): SaveStateV8 | null {
     case 3: {
       const v3 = parseSaveStateV3(envelope.state);
       return v3
-        ? migrateV7ToV8(
-            migrateV6ToV7(migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(v3)))),
+        ? migrateV8ToV9(
+            migrateV7ToV8(
+              migrateV6ToV7(migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(v3)))),
+            ),
           )
         : null;
     }
     case 4: {
       const v4 = parseSaveStateV4(envelope.state);
       return v4
-        ? migrateV7ToV8(migrateV6ToV7(migrateV5ToV6(migrateV4ToV5(v4))))
+        ? migrateV8ToV9(
+            migrateV7ToV8(migrateV6ToV7(migrateV5ToV6(migrateV4ToV5(v4)))),
+          )
         : null;
     }
     case 5: {
       const v5 = parseSaveStateV5(envelope.state);
-      return v5 ? migrateV7ToV8(migrateV6ToV7(migrateV5ToV6(v5))) : null;
+      return v5
+        ? migrateV8ToV9(migrateV7ToV8(migrateV6ToV7(migrateV5ToV6(v5))))
+        : null;
     }
     case 6: {
       const v6 = parseSaveStateV6(envelope.state);
-      return v6 ? migrateV7ToV8(migrateV6ToV7(v6)) : null;
+      return v6 ? migrateV8ToV9(migrateV7ToV8(migrateV6ToV7(v6))) : null;
     }
     case 7: {
       const v7 = parseSaveStateV7(envelope.state);
-      return v7 ? migrateV7ToV8(v7) : null;
+      return v7 ? migrateV8ToV9(migrateV7ToV8(v7)) : null;
     }
-    case 8:
-      return parseSaveStateV8(envelope.state);
+    case 8: {
+      const v8 = parseSaveStateV8(envelope.state);
+      return v8 ? migrateV8ToV9(v8) : null;
+    }
+    case 9:
+      return parseSaveStateV9(envelope.state);
     default:
       return null;
   }
@@ -701,7 +725,7 @@ export function serializeGameState(
     planetStates[planetId] = toSavedPlanetProgressV5(state.planetStates[planetId]);
   }
 
-  const saveState: SaveStateV8 = {
+  const saveState: SaveStateV9 = {
     energy: state.energy,
     planetStates,
     unlockedPlanets: state.unlockedPlanets,
@@ -712,6 +736,8 @@ export function serializeGameState(
     settings: {
       soundEnabled: state.settings.soundEnabled,
       hapticsEnabled: state.settings.hapticsEnabled,
+      showSpinMultiplier: state.settings.showSpinMultiplier,
+      reduceEffects: state.settings.reduceEffects,
     },
     achievements: {
       completedIds: [...state.achievements.completedIds],
@@ -765,7 +791,7 @@ export function parseSaveEnvelope(raw: string): LoadedSave | null {
   }
 }
 
-export function toGameState(saveState: SaveStateV8): GameState {
+export function toGameState(saveState: SaveStateV9): GameState {
   const planetStates = parsePlanetStatesMapV5(saveState.planetStates);
   const unlockedPlanets = resolveUnlockedPlanets(
     saveState.unlockedPlanets,

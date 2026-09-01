@@ -10,6 +10,11 @@ import {
 
 import type { PlanetVisualConfig } from '../../config/celestial';
 import { getSpinBoostIntensity, SPEED_STREAK_ANGLES } from '../spinBoost';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import {
+  getVisibleStreakAngles,
+  scaleGlowOpacity,
+} from '../../visual/effects';
 import { surfaceOffsetToRotation } from '../../visual/sphericalProjection';
 import {
   projectedBlobPath,
@@ -86,17 +91,25 @@ export function PlaceholderSphere({
 }: PlaceholderSphereProps) {
   const clip = makeCircleClip(centerX, centerY, radius);
   const rotation = surfaceOffsetToRotation(surfaceOffset);
-  const boostIntensity = getSpinBoostIntensity(spinRatio);
+  const reduceEffects = useReduceEffects();
+  const boostIntensity =
+    getSpinBoostIntensity(spinRatio) * (reduceEffects ? 0.45 : 1);
   const accentColor = config.placeholderAccentColor ?? '#66bb6a';
   const atmosphere =
     config.placeholderAtmosphereColor ?? 'rgba(59, 130, 246, 0.2)';
   const atmosphereStrength = Math.min(1, readAlpha(atmosphere, 0.2) / 0.2);
-  const outerGlowOpacity =
-    (0.1 + boostIntensity * 0.1) * atmosphereStrength;
-  const innerGlowOpacity =
-    (0.16 + boostIntensity * 0.12) * atmosphereStrength;
-  const rimGlowOpacity =
-    (0.24 + boostIntensity * 0.1) * Math.max(0.35, atmosphereStrength);
+  const outerGlowOpacity = scaleGlowOpacity(
+    (0.1 + boostIntensity * 0.1) * atmosphereStrength,
+    reduceEffects,
+  );
+  const innerGlowOpacity = scaleGlowOpacity(
+    (0.16 + boostIntensity * 0.12) * atmosphereStrength,
+    reduceEffects,
+  );
+  const rimGlowOpacity = scaleGlowOpacity(
+    (0.24 + boostIntensity * 0.1) * Math.max(0.35, atmosphereStrength),
+    reduceEffects,
+  );
   const lightX = centerX - radius * 0.4;
   const lightY = centerY - radius * 0.35;
   const shadowX = centerX + radius * 0.45;
@@ -132,7 +145,7 @@ export function PlaceholderSphere({
       />
 
       {boostIntensity > 0 &&
-        SPEED_STREAK_ANGLES.map((angle, index) => (
+        getVisibleStreakAngles(SPEED_STREAK_ANGLES, reduceEffects).map((angle, index) => (
           <Path
             key={`streak-${index}`}
             path={makeSpeedStreakPath(centerX, centerY, radius, angle, boostIntensity)}

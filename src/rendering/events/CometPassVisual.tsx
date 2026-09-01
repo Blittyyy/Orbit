@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+
 interface CometPassVisualProps {
   width: number;
   height: number;
@@ -15,6 +17,8 @@ export function CometPassVisual({
   visible,
   onTap,
 }: CometPassVisualProps) {
+  const reduceEffects = useReduceEffects();
+
   if (!visible || width <= 0 || height <= 0) {
     return null;
   }
@@ -42,8 +46,8 @@ export function CometPassVisual({
       ]}
     >
       <View style={styles.comet}>
-        <View style={styles.head} />
-        <View style={styles.tail} />
+        <View style={[styles.head, reduceEffects && styles.headReduced]} />
+        <View style={[styles.tail, reduceEffects && styles.tailReduced]} />
       </View>
     </Pressable>
   );
@@ -70,11 +74,20 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     width: 16,
   },
+  headReduced: {
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+  },
   tail: {
     backgroundColor: 'rgba(191, 219, 254, 0.75)',
     borderRadius: 999,
     height: 4,
     marginLeft: -2,
     width: 42,
+  },
+  tailReduced: {
+    backgroundColor: 'rgba(191, 219, 254, 0.4)',
+    height: 2,
+    width: 24,
   },
 });

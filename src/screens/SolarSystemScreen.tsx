@@ -23,8 +23,10 @@ import {
   PlaceholderPlanetDot,
   PlaceholderSun,
 } from '../rendering/placeholders/SolarSystemBodies';
-import { getStarColor, STARS } from '../rendering/stars';
+import { getStarColor } from '../rendering/stars';
+import { getVisibleStars } from '../visual/effects';
 import { PlanetInfoPanel } from '../ui/PlanetInfoPanel';
+import { SolarSystemMenuBar } from '../ui/SolarSystemMenuBar';
 import { SolarSystemSceneTransition } from '../ui/transitions/SolarSystemSceneTransition';
 import {
   SOLAR_EARTH_ORBIT_RX_FACTOR,
@@ -65,8 +67,6 @@ export function SolarSystemScreen() {
     state,
     enterPlanet,
     goToEarth,
-    openPrestige,
-    openAchievements,
     navTransition,
     solarSystemSelectedPlanet,
     solarSystemOriginPlanet,
@@ -75,6 +75,7 @@ export function SolarSystemScreen() {
   const { feedback } = useFeedback();
   const [selectedBody, setSelectedBody] = useState<SelectedBody | null>(null);
   const frontierPlanetId = getFrontierPlanetId(state);
+  const stars = getVisibleStars(state.settings.reduceEffects);
 
   const selectBody = useCallback(
     (body: SelectedBody) => {
@@ -410,7 +411,7 @@ export function SolarSystemScreen() {
           />
         </Rect>
 
-        {STARS.map((star, index) => (
+        {stars.map((star, index) => (
           <Circle
             key={index}
             cx={star.x * width}
@@ -809,25 +810,7 @@ export function SolarSystemScreen() {
         </Text>
       </View>
 
-      <Pressable
-        style={[styles.prestigeButton, { top: insets.top + 44 }]}
-        onPress={() => {
-          feedback.onUiButton();
-          openPrestige();
-        }}
-      >
-        <Text style={styles.prestigeButtonText}>Prestige</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.achievementsButton, { top: insets.top + 44 }]}
-        onPress={() => {
-          feedback.onUiButton();
-          openAchievements();
-        }}
-      >
-        <Text style={styles.achievementsButtonText}>Achievements</Text>
-      </Pressable>
+      <SolarSystemMenuBar />
           </>
         }
         panel={
@@ -882,38 +865,6 @@ const styles = StyleSheet.create({
   stardustText: {
     color: '#fde68a',
     fontSize: 14,
-    fontWeight: '700',
-  },
-  prestigeButton: {
-    backgroundColor: 'rgba(76, 29, 149, 0.88)',
-    borderColor: 'rgba(196, 181, 253, 0.45)',
-    borderRadius: 10,
-    borderWidth: 1,
-    left: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    position: 'absolute',
-    zIndex: 10,
-  },
-  prestigeButtonText: {
-    color: '#ddd6fe',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  achievementsButton: {
-    backgroundColor: 'rgba(12, 8, 32, 0.88)',
-    borderColor: 'rgba(253, 224, 71, 0.42)',
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    position: 'absolute',
-    right: 12,
-    zIndex: 10,
-  },
-  achievementsButtonText: {
-    color: '#fde68a',
-    fontSize: 13,
     fontWeight: '700',
   },
   panelContainer: {

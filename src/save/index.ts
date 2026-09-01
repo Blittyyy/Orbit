@@ -19,6 +19,7 @@ export type {
   SaveStateV6,
   SaveStateV7,
   SaveStateV8,
+  SaveStateV9,
   VersionedSaveEnvelope,
 } from './saveTypes';
 export { parseSaveEnvelope, serializeGameState, toGameState } from './saveCodec';

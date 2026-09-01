@@ -12,6 +12,11 @@ import {
 
 import type { PlanetVisualConfig } from '../../config/celestial';
 import { getSpinBoostIntensity, SPEED_STREAK_ANGLES } from '../spinBoost';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import {
+  getVisibleStreakAngles,
+  scaleGlowOpacity,
+} from '../../visual/effects';
 import { surfaceOffsetToRotation } from '../../visual/sphericalProjection';
 import { projectedSpotEllipse } from './sphereSurface';
 
@@ -75,14 +80,25 @@ export function PlaceholderIceGiant({
   const clip = makeCircleClip(centerX, centerY, radius);
   const rotation = surfaceOffsetToRotation(surfaceOffset);
   const axialTilt = config.axialTiltRadians ?? 0;
-  const boostIntensity = getSpinBoostIntensity(spinRatio);
+  const reduceEffects = useReduceEffects();
+  const boostIntensity =
+    getSpinBoostIntensity(spinRatio) * (reduceEffects ? 0.45 : 1);
   const atmosphere =
     config.placeholderAtmosphereColor ?? 'rgba(34, 211, 238, 0.2)';
   const bands = config.gasGiantBands ?? [];
   const spot = config.gasGiantSpot;
-  const outerGlowOpacity = 0.14 + boostIntensity * 0.1;
-  const innerGlowOpacity = 0.2 + boostIntensity * 0.12;
-  const rimGlowOpacity = 0.28 + boostIntensity * 0.1;
+  const outerGlowOpacity = scaleGlowOpacity(
+    0.14 + boostIntensity * 0.1,
+    reduceEffects,
+  );
+  const innerGlowOpacity = scaleGlowOpacity(
+    0.2 + boostIntensity * 0.12,
+    reduceEffects,
+  );
+  const rimGlowOpacity = scaleGlowOpacity(
+    0.28 + boostIntensity * 0.1,
+    reduceEffects,
+  );
 
   const spotEllipse = spot
     ? projectedSpotEllipse(
@@ -126,7 +142,7 @@ export function PlaceholderIceGiant({
       />
 
       {boostIntensity > 0 &&
-        SPEED_STREAK_ANGLES.map((angle, index) => (
+        getVisibleStreakAngles(SPEED_STREAK_ANGLES, reduceEffects).map((angle, index) => (
           <Path
             key={`ice-streak-${index}`}
             path={makeSpeedStreakPath(centerX, centerY, radius, angle, boostIntensity)}

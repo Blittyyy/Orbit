@@ -1,6 +1,8 @@
 import { Circle, Group, RadialGradient, Skia, vec } from '@shopify/react-native-skia';
 
 import type { MoonVisualConfig } from '../../config/celestial';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import { scaleGlowOpacity } from '../../visual/effects';
 
 /** Cosmetic-only Titan / moon progression tiers. */
 export type MoonCosmeticTier = 0 | 1 | 2 | 3 | 4;
@@ -62,9 +64,11 @@ export function PlaceholderMoon({
   cosmeticTier = 1,
 }: PlaceholderMoonProps) {
   const clip = makeCircleClip(x, y, radius);
+  const reduceEffects = useReduceEffects();
   const glowBoost =
     cosmeticTier >= 2 ? 0.12 + (cosmeticTier - 2) * 0.06 : 0;
-  const glowOpacity = 0.14 + unlockFlash * 0.35 + glowBoost;
+  const glowOpacity =
+    scaleGlowOpacity(0.14 + glowBoost, reduceEffects) + unlockFlash * 0.35;
   const outerGlow = withGlowAlpha(
     config.placeholderGlowColor,
     glowOpacity * 0.55,

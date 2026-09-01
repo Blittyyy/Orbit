@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SHOW_DEV_CONTROLS } from '../config/dev';
 import { useGameSession } from '../context/GameSessionContext';
+import { useFeedback } from '../feedback';
 import {
   canAffordPrestigeUpgrade,
   canPrestige,
@@ -26,6 +27,7 @@ import {
   type PrestigeUpgradeId,
 } from '../game/prestige';
 import { formatNumber } from '../utils/formatNumber';
+import { DevPanel } from '../ui/DevPanel';
 
 function formatPercent(value: number): string {
   return `${value.toLocaleString('en-US', {
@@ -43,6 +45,7 @@ export function PrestigeScreen() {
     devReadyPrestige,
     devAddStardust,
   } = useGameSession();
+  const { feedback } = useFeedback();
 
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [collapsing, setCollapsing] = useState(false);
@@ -143,7 +146,13 @@ export function PrestigeScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => openSolarSystem()} style={styles.backButton}>
+        <Pressable
+          onPress={() => {
+            feedback.onUiButton();
+            openSolarSystem();
+          }}
+          style={styles.backButton}
+        >
           <Text style={styles.backText}>← Solar System</Text>
         </Pressable>
       </View>
@@ -204,14 +213,14 @@ export function PrestigeScreen() {
         </View>
 
         {__DEV__ && SHOW_DEV_CONTROLS ? (
-          <View style={styles.devRow}>
+          <DevPanel variant="inline">
             <Pressable onPress={devReadyPrestige} style={styles.devButton}>
-              <Text style={styles.devButtonText}>DEV Ready Prestige</Text>
+              <Text style={styles.devButtonText}>Ready Prestige</Text>
             </Pressable>
             <Pressable onPress={devAddStardust} style={styles.devButton}>
-              <Text style={styles.devButtonText}>DEV +10 Stardust</Text>
+              <Text style={styles.devButtonText}>+10 Stardust</Text>
             </Pressable>
-          </View>
+          </DevPanel>
         ) : null}
       </ScrollView>
 
@@ -435,10 +444,6 @@ const styles = StyleSheet.create({
   },
   upgradeButtonTextDisabled: {
     color: '#64748b',
-  },
-  devRow: {
-    gap: 8,
-    marginTop: 20,
   },
   devButton: {
     backgroundColor: 'rgba(76, 29, 149, 0.85)',

@@ -1,6 +1,8 @@
 import { Group, Path, Rect, Skia } from '@shopify/react-native-skia';
 
 import type { OrbitingObjectVisualConfig } from '../../config/celestial';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import { scaleGlowOpacity } from '../../visual/effects';
 
 interface PlaceholderSatelliteProps {
   config: OrbitingObjectVisualConfig;
@@ -17,12 +19,14 @@ export function PlaceholderSatellite({
   radius,
   unlockFlash = 0,
 }: PlaceholderSatelliteProps) {
+  const reduceEffects = useReduceEffects();
   const bodyWidth = radius * 1.15;
   const bodyHeight = radius * 0.72;
   const panelWidth = radius * 1.15;
   const panelHeight = radius * 0.42;
   const accent = config.placeholderAccentColor ?? '#38bdf8';
-  const glowOpacity = 0.1 + unlockFlash * 0.4;
+  const glowOpacity =
+    scaleGlowOpacity(0.1, reduceEffects) + unlockFlash * 0.4;
 
   const dish = Skia.Path.Make();
   dish.moveTo(x, y - bodyHeight * 0.85);

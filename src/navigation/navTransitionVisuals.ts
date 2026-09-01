@@ -1,11 +1,13 @@
 import type { PlanetId } from '../config/planets';
+import type { AppRoute } from './types';
 
-import type { NavTransitionState } from './navTransition';
+import { isOverlayRoute, type NavTransitionState } from './navTransition';
 
 export const PLANET_OUT_SCALE = 0.72;
 export const PLANET_IN_SCALE = 1.16;
 export const SOLAR_OUT_SCALE = 1.04;
 export const SOLAR_IN_SCALE = 0.9;
+export const OVERLAY_SLIDE_DISTANCE = 18;
 
 export interface PlanetTransitionVisuals {
   planetScale: number;
@@ -21,6 +23,11 @@ export interface SolarTransitionVisuals {
   panelOpacity: number;
 }
 
+export interface OverlayTransitionVisuals {
+  opacity: number;
+  translateY: number;
+}
+
 const PLANET_VISIBLE: PlanetTransitionVisuals = {
   planetScale: 1,
   sceneOpacity: 1,
@@ -33,6 +40,11 @@ const SOLAR_VISIBLE: SolarTransitionVisuals = {
   mapOpacity: 1,
   chromeOpacity: 1,
   panelOpacity: 1,
+};
+
+const OVERLAY_VISIBLE: OverlayTransitionVisuals = {
+  opacity: 1,
+  translateY: 0,
 };
 
 export function isLeavingPlanetLayer(
@@ -57,7 +69,21 @@ export function isLeavingSolarLayer(
   return (
     leavingRoute === 'solarSystem' &&
     route !== 'solarSystem' &&
-    navTransition.kind === 'solar-to-planet'
+    (navTransition.kind === 'solar-to-planet' ||
+      navTransition.kind === 'solar-to-overlay')
+  );
+}
+
+export function isLeavingOverlayLayer(
+  navTransition: NavTransitionState,
+  route: string,
+  leavingRoute: string | null,
+): boolean {
+  return (
+    leavingRoute !== null &&
+    isOverlayRoute(leavingRoute as AppRoute) &&
+    route !== leavingRoute &&
+    navTransition.kind === 'overlay-to-solar'
   );
 }
 
@@ -122,6 +148,24 @@ export function getSolarTransitionVisuals(
     };
   }
 
+  if (phase === 'in' && kind === 'overlay-to-solar') {
+    return {
+      mapScale: 1,
+      mapOpacity: 0,
+      chromeOpacity: 0,
+      panelOpacity: 0,
+    };
+  }
+
+  if (isLeaving && kind === 'solar-to-overlay') {
+    return {
+      mapScale: 1,
+      mapOpacity: 0,
+      chromeOpacity: 0,
+      panelOpacity: 0,
+    };
+  }
+
   if (isLeaving) {
     return {
       mapScale: SOLAR_OUT_SCALE,
@@ -132,4 +176,35 @@ export function getSolarTransitionVisuals(
   }
 
   return SOLAR_VISIBLE;
+}
+
+export function getOverlayTransitionVisuals(
+  navTransition: NavTransitionState,
+  options: {
+    route: string;
+    leavingRoute: string | null;
+  },
+): OverlayTransitionVisuals {
+  const { phase, kind } = navTransition;
+  const isLeaving = isLeavingOverlayLayer(
+    navTransition,
+    options.route,
+    options.leavingRoute,
+  );
+
+  if (phase === 'in' && kind === 'solar-to-overlay') {
+    return {
+      opacity: 0,
+      translateY: OVERLAY_SLIDE_DISTANCE,
+    };
+  }
+
+  if (isLeaving) {
+    return {
+      opacity: 0,
+      translateY: OVERLAY_SLIDE_DISTANCE,
+    };
+  }
+
+  return OVERLAY_VISIBLE;
 }

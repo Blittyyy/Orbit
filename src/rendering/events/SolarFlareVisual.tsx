@@ -1,5 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+
 interface SolarFlareVisualProps {
   centerX: number;
   centerY: number;
@@ -13,17 +15,20 @@ export function SolarFlareVisual({
   planetRadius,
   visible,
 }: SolarFlareVisualProps) {
+  const reduceEffects = useReduceEffects();
+
   if (!visible) {
     return null;
   }
 
-  const glowSize = planetRadius * 2.8;
+  const glowSize = planetRadius * (reduceEffects ? 2.1 : 2.8);
 
   return (
     <View
       pointerEvents="none"
       style={[
         styles.glow,
+        reduceEffects && styles.glowReduced,
         {
           width: glowSize,
           height: glowSize,
@@ -33,10 +38,10 @@ export function SolarFlareVisual({
         },
       ]}
     >
-      <View style={styles.innerGlow} />
+      <View style={[styles.innerGlow, reduceEffects && styles.innerGlowReduced]} />
       <View style={[styles.streak, styles.streakOne]} />
-      <View style={[styles.streak, styles.streakTwo]} />
-      <View style={[styles.streak, styles.streakThree]} />
+      {reduceEffects ? null : <View style={[styles.streak, styles.streakTwo]} />}
+      {reduceEffects ? null : <View style={[styles.streak, styles.streakThree]} />}
     </View>
   );
 }
@@ -49,10 +54,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 4,
   },
+  glowReduced: {
+    backgroundColor: 'rgba(251, 146, 60, 0.07)',
+    borderColor: 'rgba(253, 186, 116, 0.18)',
+  },
   innerGlow: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(253, 224, 71, 0.08)',
     borderRadius: 999,
+  },
+  innerGlowReduced: {
+    backgroundColor: 'rgba(253, 224, 71, 0.04)',
   },
   streak: {
     backgroundColor: 'rgba(253, 224, 71, 0.35)',

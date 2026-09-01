@@ -9,6 +9,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+
 const MILESTONE_DURATION_MS = 1800;
 
 interface VisualUnlockMilestoneProps {
@@ -22,6 +24,7 @@ export function VisualUnlockMilestone({
   visible,
   onComplete,
 }: VisualUnlockMilestoneProps) {
+  const reduceEffects = useReduceEffects();
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.82);
   const glow = useSharedValue(0);
@@ -57,8 +60,8 @@ export function VisualUnlockMilestone({
   }));
 
   const glowStyle = useAnimatedStyle(() => ({
-    opacity: glow.value * 0.55,
-    transform: [{ scale: 1 + glow.value * 0.25 }],
+    opacity: glow.value * (reduceEffects ? 0.18 : 0.55),
+    transform: [{ scale: 1 + glow.value * (reduceEffects ? 0.08 : 0.25) }],
   }));
 
   if (!visible) {

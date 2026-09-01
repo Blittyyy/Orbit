@@ -21,6 +21,7 @@ import { SHOW_DEV_CONTROLS } from '../config/dev';
 import { useGameSession } from '../context/GameSessionContext';
 import { useFeedback } from '../feedback';
 import { AchievementClaimPop } from '../ui/AchievementClaimPop';
+import { DevPanel } from '../ui/DevPanel';
 
 function AchievementCard({
   item,
@@ -164,12 +165,14 @@ export function AchievementsScreen() {
         })}
 
         {SHOW_DEV_CONTROLS ? (
-          <Pressable
-            onPress={devCompleteAllAchievements}
-            style={styles.devButton}
-          >
-            <Text style={styles.devButtonText}>DEV Complete Achievements</Text>
-          </Pressable>
+          <DevPanel variant="inline">
+            <Pressable
+              onPress={devCompleteAllAchievements}
+              style={styles.devButton}
+            >
+              <Text style={styles.devButtonText}>Complete Achievements</Text>
+            </Pressable>
+          </DevPanel>
         ) : null}
       </ScrollView>
 

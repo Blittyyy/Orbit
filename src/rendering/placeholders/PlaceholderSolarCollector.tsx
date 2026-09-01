@@ -1,6 +1,8 @@
 import { Group, Rect } from '@shopify/react-native-skia';
 
 import type { OrbitingObjectVisualConfig } from '../../config/celestial';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import { scaleGlowOpacity } from '../../visual/effects';
 
 interface PlaceholderSolarCollectorProps {
   config: OrbitingObjectVisualConfig;
@@ -18,12 +20,14 @@ export function PlaceholderSolarCollector({
   radius,
   unlockFlash = 0,
 }: PlaceholderSolarCollectorProps) {
+  const reduceEffects = useReduceEffects();
   const panelWidth = radius * 2.8;
   const panelHeight = radius * 0.7;
   const mastWidth = radius * 0.28;
   const mastHeight = radius * 0.95;
   const accent = config.placeholderAccentColor ?? '#fbbf24';
-  const glowOpacity = 0.1 + unlockFlash * 0.35;
+  const glowOpacity =
+    scaleGlowOpacity(0.1, reduceEffects) + unlockFlash * 0.35;
 
   return (
     <Group>

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { MeteorRuntimeState } from '../../events';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
 
 interface MeteorShowerVisualProps {
   meteors: MeteorRuntimeState[];
@@ -19,6 +20,8 @@ export function MeteorShowerVisual({
   visible,
   onTapMeteor,
 }: MeteorShowerVisualProps) {
+  const reduceEffects = useReduceEffects();
+
   if (!visible) {
     return null;
   }
@@ -60,7 +63,7 @@ export function MeteorShowerVisual({
           >
             <View style={[styles.meteor, { transform: [{ rotate: `${angle}deg` }] }]}>
               <View style={styles.head} />
-              <View style={styles.tail} />
+              <View style={[styles.tail, reduceEffects && styles.tailReduced]} />
             </View>
           </Pressable>
         );
@@ -92,5 +95,9 @@ const styles = StyleSheet.create({
     height: 2,
     marginLeft: -1,
     width: 24,
+  },
+  tailReduced: {
+    backgroundColor: 'rgba(251, 191, 36, 0.4)',
+    width: 12,
   },
 });

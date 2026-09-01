@@ -49,11 +49,10 @@ import { SatelliteView } from '../rendering/SatelliteView';
 import { StationView } from '../rendering/StationView';
 import { PlaceholderPlanetRings, getRingEnhancementTier } from '../rendering/placeholders/PlaceholderPlanetRings';
 import { getMoonCosmeticTier } from '../rendering/placeholders/PlaceholderMoon';
-import { getStarColor, STARS } from '../rendering/stars';
+import { getStarColor } from '../rendering/stars';
+import { getVisibleStars } from '../visual/effects';
 import { DevPlanetControls } from '../ui/DevPlanetControls';
 import { AchievementClaimPop } from '../ui/AchievementClaimPop';
-import { DevSpinReadout } from '../ui/DevSpinReadout';
-import { DevSpinTestTracker } from '../ui/DevSpinTestTracker';
 import { EnergyDisplay } from '../ui/EnergyDisplay';
 import { OfflineEarningsModal } from '../ui/OfflineEarningsModal';
 import { OrbitUpgradeCard } from '../ui/OrbitUpgradeCard';
@@ -62,6 +61,7 @@ import { PlanetLabel } from '../ui/PlanetLabel';
 import { RotationSpeedUpgradeCard } from '../ui/RotationSpeedUpgradeCard';
 import { SolarSystemButton } from '../ui/SolarSystemButton';
 import { SpaceEventBanner } from '../ui/SpaceEventBanner';
+import { SpinMultiplierBadge } from '../ui/SpinMultiplierBadge';
 import { PlanetUnlockCelebration } from '../ui/celebration/PlanetUnlockCelebration';
 import { VisualUnlockMilestone } from '../ui/celebration/VisualUnlockMilestone';
 import { PlanetSceneTransition } from '../ui/transitions/PlanetSceneTransition';
@@ -172,6 +172,7 @@ export function PlanetGameScreen({ planetId }: PlanetGameScreenProps) {
 
   const { feedback, settings } = useFeedback();
   const { celebration, dismissCelebration } = usePlanetUnlockCelebration(state);
+  const stars = getVisibleStars(settings.reduceEffects);
 
   const {
     activeEvent,
@@ -532,7 +533,7 @@ export function PlanetGameScreen({ planetId }: PlanetGameScreenProps) {
           />
         </Rect>
 
-        {STARS.map((star, index) => (
+        {stars.map((star, index) => (
           <Circle
             key={index}
             cx={star.x * width}
@@ -770,6 +771,11 @@ export function PlanetGameScreen({ planetId }: PlanetGameScreenProps) {
 
       <View style={celebration ? styles.dimmedUi : undefined} pointerEvents="none">
         <PlanetLabel top={labelTop} name={planetName} />
+        <SpinMultiplierBadge
+          spinRatio={spinRatio}
+          visible={settings.showSpinMultiplier}
+          top={labelTop + 26}
+        />
       </View>
 
       <View style={celebration ? styles.dimmedUi : undefined}>
@@ -784,6 +790,7 @@ export function PlanetGameScreen({ planetId }: PlanetGameScreenProps) {
       <DevPlanetControls
         planetId={planetId}
         primaryUpgradeUnlocked={primaryUnlocked}
+        spinRatio={spinRatio}
         onLevelUp={() => devLevelUp(planetId)}
         onLevelUpSatellite={() => devLevelUpSatellite(planetId)}
         onResetSave={devResetSave}
@@ -801,9 +808,6 @@ export function PlanetGameScreen({ planetId }: PlanetGameScreenProps) {
         onTriggerSolarFlare={() => triggerDevEvent('solar-flare')}
         onTriggerMeteorShower={() => triggerDevEvent('meteor-shower')}
       />
-
-      <DevSpinReadout spinRatio={spinRatio} />
-      <DevSpinTestTracker spinRatio={spinRatio} />
           </>
         }
         hud={

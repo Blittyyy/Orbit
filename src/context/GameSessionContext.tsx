@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { BackHandler } from 'react-native';
 
 import type { PlanetId } from '../config/planets';
 import { getPlayablePlanetIds } from '../config/planets';
@@ -20,12 +21,14 @@ import type { GameSettings } from '../game/settings';
 import type { GameState } from '../game/types';
 import { createFeedbackController } from '../feedback/feedbackController';
 import { useGameEngine } from '../hooks/useGameEngine';
-import type { AppRoute } from '../navigation/types';
+import type { AppRoute, OverlayRoute } from '../navigation/types';
 import {
   IDLE_NAV_TRANSITION,
+  isOverlayRoute,
   isPlanetRoute,
   NAV_TRANSITION_IN_MS,
   NAV_TRANSITION_OUT_MS,
+  type NavTransitionKind,
   type NavTransitionState,
 } from '../navigation/navTransition';
 import {
@@ -75,6 +78,7 @@ interface GameSessionContextValue {
   setSolarSystemSelectedPlanet: (planetId: PlanetId | null) => void;
   openPrestige: () => void;
   openAchievements: () => void;
+  openSettings: () => void;
   enterPlanet: (planetId: PlanetId) => void;
   claimAchievement: (achievementId: string) => boolean;
   devCompleteAllAchievements: () => void;
@@ -195,8 +199,8 @@ export function GameSessionProvider({ children }: { children: ReactNode }) {
 
   const runNavTransition = useCallback(
     (
-      kind: 'planet-to-solar' | 'solar-to-planet',
-      focusPlanetId: PlanetId,
+      kind: NavTransitionKind,
+      focusPlanetId: PlanetId | null,
       onSwap: () => void,
     ) => {
       if (navTransitionRef.current.phase === 'out') {
@@ -251,6 +255,13 @@ export function GameSessionProvider({ children }: { children: ReactNode }) {
         setSolarSystemSelectedPlanet(selection);
       }
 
+      if (isOverlayRoute(route)) {
+        runNavTransition('overlay-to-solar', focusPlanet, () => {
+          setRoute('solarSystem');
+        });
+        return;
+      }
+
       if (!isPlanetRoute(route)) {
         setRoute('solarSystem');
         return;
@@ -268,23 +279,51 @@ export function GameSessionProvider({ children }: { children: ReactNode }) {
     ],
   );
 
+  const openOverlay = useCallback(
+    (nextRoute: OverlayRoute) => {
+      if (route === nextRoute) {
+        return;
+      }
+
+      if (navTransitionRef.current.phase === 'out') {
+        return;
+      }
+
+      if (route === 'solarSystem') {
+        runNavTransition(
+          'solar-to-overlay',
+          solarSystemSelectedPlanet,
+          () => {
+            setRoute(nextRoute);
+          },
+        );
+        return;
+      }
+
+      clearTransitionTimers();
+      finishNavigation();
+      setRoute(nextRoute);
+    },
+    [
+      clearTransitionTimers,
+      finishNavigation,
+      route,
+      runNavTransition,
+      solarSystemSelectedPlanet,
+    ],
+  );
+
   const openPrestige = useCallback(() => {
-    if (isNavigatingRef.current) {
-      return;
-    }
-    clearTransitionTimers();
-    finishNavigation();
-    setRoute('prestige');
-  }, [clearTransitionTimers, finishNavigation]);
+    openOverlay('prestige');
+  }, [openOverlay]);
 
   const openAchievements = useCallback(() => {
-    if (isNavigatingRef.current) {
-      return;
-    }
-    clearTransitionTimers();
-    finishNavigation();
-    setRoute('achievements');
-  }, [clearTransitionTimers, finishNavigation]);
+    openOverlay('achievements');
+  }, [openOverlay]);
+
+  const openSettings = useCallback(() => {
+    openOverlay('settings');
+  }, [openOverlay]);
 
   const enterPlanet = useCallback(
     (planetId: PlanetId) => {
@@ -336,6 +375,23 @@ export function GameSessionProvider({ children }: { children: ReactNode }) {
     game.selectPlanet('earth');
     setRoute('earth');
   }, [feedback, game, route, runNavTransition, solarSystemOriginPlanet]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (navTransitionRef.current.phase === 'out') {
+        return true;
+      }
+
+      if (isOverlayRoute(route) || isPlanetRoute(route)) {
+        openSolarSystem();
+        return true;
+      }
+
+      return false;
+    });
+
+    return () => subscription.remove();
+  }, [openSolarSystem, route]);
 
   const performPrestige = useCallback(() => {
     const succeeded = game.performPrestige();
@@ -390,6 +446,7 @@ export function GameSessionProvider({ children }: { children: ReactNode }) {
       setSolarSystemSelectedPlanet,
       openPrestige,
       openAchievements,
+      openSettings,
       enterPlanet,
       claimAchievement: game.claimAchievement,
       devCompleteAllAchievements: game.devCompleteAllAchievements,
@@ -413,6 +470,7 @@ export function GameSessionProvider({ children }: { children: ReactNode }) {
       openSolarSystem,
       openPrestige,
       openAchievements,
+      openSettings,
       enterPlanet,
       goToEarth,
     ],

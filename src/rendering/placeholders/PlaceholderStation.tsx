@@ -1,6 +1,8 @@
 import { Group, Rect } from '@shopify/react-native-skia';
 
 import type { OrbitingObjectVisualConfig } from '../../config/celestial';
+import { useReduceEffects } from '../../visual/EffectsSettingsContext';
+import { scaleGlowOpacity } from '../../visual/effects';
 
 interface PlaceholderStationProps {
   config: OrbitingObjectVisualConfig;
@@ -18,12 +20,14 @@ export function PlaceholderStation({
   radius,
   unlockFlash = 0,
 }: PlaceholderStationProps) {
+  const reduceEffects = useReduceEffects();
   const deckWidth = radius * 2.2;
   const deckHeight = radius * 0.55;
   const towerWidth = radius * 0.55;
   const towerHeight = radius * 1.15;
   const accent = config.placeholderAccentColor ?? '#f59e0b';
-  const glowOpacity = 0.12 + unlockFlash * 0.4;
+  const glowOpacity =
+    scaleGlowOpacity(0.12, reduceEffects) + unlockFlash * 0.4;
 
   return (
     <Group>

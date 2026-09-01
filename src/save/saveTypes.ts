@@ -1,5 +1,5 @@
 /** Increment when the on-disk save shape changes. */
-export const CURRENT_SAVE_VERSION = 8;
+export const CURRENT_SAVE_VERSION = 9;
 
 export const SAVE_STORAGE_KEY = '@orbit/game-save-v1';
 
@@ -79,6 +79,8 @@ export interface SaveStateV6 extends SaveStateV5 {
 export interface SavedGameSettings {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
+  showSpinMultiplier: boolean;
+  reduceEffects: boolean;
 }
 
 /** Current save shape — adds persisted player settings. */
@@ -92,10 +94,13 @@ export interface SavedAchievementProgress {
   peakSpinProductionMultiplier: number;
 }
 
-/** Current save shape — adds persisted achievement progress. */
+/** Save v8 — persisted achievement progress. */
 export interface SaveStateV8 extends SaveStateV7 {
   achievements: SavedAchievementProgress;
 }
+
+/** Current save shape — adds display / gameplay preference settings. */
+export interface SaveStateV9 extends SaveStateV8 {}
 
 export interface VersionedSaveEnvelope {
   version: number;
@@ -105,7 +110,7 @@ export interface VersionedSaveEnvelope {
 
 export interface LoadedSave {
   savedAt: number;
-  state: SaveStateV8;
+  state: SaveStateV9;
 }
 
-export type HydratableSaveState = SaveStateV8;
+export type HydratableSaveState = SaveStateV9;
